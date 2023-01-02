@@ -1,15 +1,10 @@
+// mod command;
+mod todo_item;
+mod tg_user_command;
+
+use tg_user_command::TgUserCommand;
 use teloxide::{prelude::*, utils::command::BotCommands};
 use teloxide::types::{User, Message, MessageKind};
-
-enum TodoItemStatus {
-    Done,
-    New
-}
-
-struct TodoItem {
-    status: TodoItemStatus,
-    text: String,
-}
 
 #[tokio::main]
 async fn main() {
@@ -17,30 +12,27 @@ async fn main() {
     log::info!("Starting command bot...");
 
     let bot = Bot::from_env();
-    Command::repl(bot, answer).await;
+    TgUserCommand::repl(bot, answer).await;
 }
 
-#[derive(BotCommands, Clone)]
-#[command(rename_rule = "lowercase", description = "These commands are supported:")]
-enum Command {
-    #[command(description = "Display this text")]
-    Help,
-    #[command(description = "Create new todo")]
-    New { todo_text: String, },
-    #[command(description = "Show list of todo")]
-    List,
-}
-
-async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
+async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand) -> ResponseResult<()> {
     match cmd {
-        Command::Help => bot.send_message(msg.chat.id, Command::descriptions().to_string()).await?,
-        Command::New { todo_text } => {
-            match user_by_msg(msg.clone) {
+        TgUserCommand::Help => bot.send_message(msg.chat.id, TgUserCommand::descriptions().to_string()).await?,
+        TgUserCommand::New { todo_text } => {
+            match user_by_msg(msg.clone()) {
                 Some(user) => bot.send_message(msg.chat.id, user.id.to_string()).await?,
-                None => bot.send_message(msg.chat.id, "No user").await?,
+                None => bot.send_message(msg.chat.id, "No user").await?, // TODO Удалить это
             }
         },
-        Command::List => bot.send_message(msg.chat.id, "todo_list.todo_items.len().to_string()").await?,
+        TgUserCommand::List => {
+            match user_by_msg(msg.clone()) {
+                Some(user) => {
+                    let user_todo_list = todo_item::todo_list_for_user(user).await;
+                    bot.send_message(msg.chat.id, user_todo_list.expect("kek error :(").tg_display()).await?
+                }
+                None => bot.send_message(msg.chat.id, "No user").await?, // TODO Удалить это
+            }
+        },
     };
 
     Ok(())
@@ -48,7 +40,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 
 fn user_by_msg(msg: Message) -> Option<User> {
     match msg.kind {
-        MessageKind::Common(messageCommon) => messageCommon.from,
+        MessageKind::Common(message_common) => message_common.from,
         _ => None
     }
 }
