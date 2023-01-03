@@ -38,7 +38,7 @@ impl TodoItem {
 
 impl TodoItem {
     fn status_as_enum(&self) -> TodoItemStatus {
-        TodoItemStatus::try_from(self.status as u8).unwrap_or(TodoItemStatus::New)
+        TodoItemStatus::try_from(self.status).unwrap_or(TodoItemStatus::New)
     }
 }
 
@@ -51,10 +51,10 @@ impl TodoList {
     }
 }
 
-impl TryFrom<u8> for TodoItemStatus {
+impl TryFrom<i16> for TodoItemStatus {
     type Error = ();
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: i16) -> Result<Self, Self::Error> {
         Ok(match value {
             0 => Self::New,
             1 => Self::Done,
