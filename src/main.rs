@@ -11,9 +11,11 @@ use dotenvy::dotenv;
 use tg_user_command::TgUserCommand;
 use teloxide::{prelude::*, utils::command::BotCommands};
 use teloxide::types::{User, Message, MessageKind};
-use crate::models::{TodoItem, TodoList};
+use crate::models::{TodoItem, TodoItemStatus, TodoList};
 
 use std::sync::{Arc, Mutex};
+use diesel::result::Error;
+use diesel::{dsl, prelude::*};
 
 use self::schema::todos;
 use self::schema::todos::dsl::*;
@@ -49,7 +51,10 @@ async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand, connection: Arc<Mute
         TgUserCommand::Help => bot.send_message(msg.chat.id, TgUserCommand::descriptions().to_string()).await?,
         TgUserCommand::New { todo_text } => {
             match msg.from() {
-                Some(user) => bot.send_message(msg.chat.id, user.id.to_string()).await?,
+                Some(user) => {
+                    add_new_todo_for_user(user, &todo_text, connection);
+                    bot.send_message(msg.chat.id, user.id.to_string()).await?
+                }
                 None => bot.send_message(msg.chat.id, "No user").await?, // TODO Удалить это
             }
         },
@@ -67,16 +72,18 @@ async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand, connection: Arc<Mute
     Ok(())
 }
 
-// fn add_new_todo_for_user(user: User, todo_text: String, connection: Arc<Mutex<SqliteConnection>>) -> Result<(), ()> {
-//     diesel::insert_into(todos::table)
-//         .values(
-//
-//         )
-//         .get_results(&mut *connection.lock().unwrap())
-//         .expect("Error saving new todo");
-//
-//     Ok(())
-// }
+fn add_new_todo_for_user(user: &User, todo_text: &str, connection: Arc<Mutex<SqliteConnection>>) {
+    diesel::insert_into(todos::table)
+        .values(
+            (
+                todos::dsl::text.eq(todo_text),
+                todos::dsl::status.eq(0),
+                todos::dsl::tg_user_id.eq(user.id.0 as i32),
+            )
+        )
+        .execute(&mut *connection.lock().unwrap())
+        .expect("TODO: panic message");
+}
 
 fn todo_list_for_user(user: &User, connection: Arc<Mutex<SqliteConnection>>) -> TodoList {
     let results = todos

@@ -1,6 +1,8 @@
 use teloxide::types::User;
-use diesel::prelude::Queryable;
+use diesel::prelude::*;
 use diesel::sql_types::Integer;
+
+use crate::schema::todos;
 
 #[repr(u8)]
 pub enum TodoItemStatus {
