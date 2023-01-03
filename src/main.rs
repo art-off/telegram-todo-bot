@@ -1,18 +1,46 @@
-// mod command;
+extern crate core;
+
 mod todo_item;
 mod tg_user_command;
+mod schema;
 
+use std::env;
+use diesel::{Connection, QueryDsl, RunQueryDsl, SqliteConnection};
+use dotenvy::dotenv;
 use tg_user_command::TgUserCommand;
 use teloxide::{prelude::*, utils::command::BotCommands};
 use teloxide::types::{User, Message, MessageKind};
+use crate::todo_item::TodoItem;
+
+use self::schema::todos;
 
 #[tokio::main]
 async fn main() {
+    use self::schema::todos::dsl::*;
+
     pretty_env_logger::init();
     log::info!("Starting command bot...");
 
+    let connection = &mut establish_connection();
+    let results = todos
+        .load::<TodoItem>(connection)
+        .expect("Error loading todos");
+
+    println!("Displaying {} todos", results.len());
+    for todo in results {
+        println!("{} {} {}", todo.id, todo.text, todo.status);
+    }
+
     let bot = Bot::from_env();
     TgUserCommand::repl(bot, answer).await;
+}
+
+fn establish_connection() -> SqliteConnection {
+    dotenv().ok();
+
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    SqliteConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
 async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand) -> ResponseResult<()> {

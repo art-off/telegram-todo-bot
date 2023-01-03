@@ -1,13 +1,27 @@
 use teloxide::types::User;
+use diesel::prelude::Queryable;
+use diesel::sql_types::Integer;
 
+#[repr(u8)]
 pub enum TodoItemStatus {
-    New,
-    Done,
+    New = 0,
+    Done = 1,
+}
+
+#[derive(Queryable)]
+pub struct TodoItem {
+    pub id: i32,
+    pub text: String,
+    pub status: i16,
+}
+
+pub struct TodoList {
+    todo_items: Vec<TodoItem>
 }
 
 impl TodoItemStatus {
     // TODO наверное есть встроенный красивый механизм
-    pub fn td_display(&self) -> String {
+    pub fn tg_display(&self) -> String {
         match self {
             TodoItemStatus::New => String::from("New"),
             TodoItemStatus::Done => String::from("Done"),
@@ -15,19 +29,10 @@ impl TodoItemStatus {
     }
 }
 
-pub struct TodoItem {
-    status: TodoItemStatus,
-    text: String,
-}
-
 impl TodoItem {
     fn tg_display(&self) -> String {
-        format!("[{}] {}", self.status.td_display(), self.text)
+        format!("[{}] {}", 4, self.text)
     }
-}
-
-pub struct TodoList {
-    todo_items: Vec<TodoItem>
 }
 
 impl TodoList {
@@ -39,14 +44,26 @@ impl TodoList {
     }
 }
 
+impl TryFrom<u8> for TodoItemStatus {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        Ok(match value {
+            0 => Self::New,
+            1 => Self::Done,
+            _ => return Err(()),
+        })
+    }
+}
+
 pub async fn todo_list_for_user(_user: User) -> Option<TodoList>{
     Some(TodoList { todo_items: vec![
-        TodoItem { status: TodoItemStatus::Done, text: String::from("First") },
-        TodoItem { status: TodoItemStatus::New, text: String::from("Second") },
-        TodoItem { status: TodoItemStatus::Done, text: String::from("Third") },
+        TodoItem { id: 4, text: String::from("First"), status: 0 },
+        TodoItem { id: 4, text: String::from("Second"), status: 0 },
+        TodoItem { id: 4, text: String::from("Third"), status: 0 },
     ]})
 }
 
-pub async fn add_new_todo_item_for_user(user: User) {
+pub async fn add_new_todo_item_for_user(_user: User) {
 
 }

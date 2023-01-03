@@ -1,0 +1,5 @@
+CREATE TABLE todos (
+    id INTEGER PRIMARY KEY NOT NULL,
+    text TEXT NOT NULL,
+    status SMALLINT NOT NULL
+)
