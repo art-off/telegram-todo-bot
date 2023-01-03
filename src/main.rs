@@ -5,16 +5,15 @@ mod tg_user_command;
 mod schema;
 
 use std::env;
-use diesel::{Connection, QueryDsl, RunQueryDsl, SqliteConnection};
+use diesel::{SqliteConnection};
 use diesel::prelude::*;
 use dotenvy::dotenv;
 use tg_user_command::TgUserCommand;
 use teloxide::{prelude::*, utils::command::BotCommands};
-use teloxide::types::{User, Message, MessageKind};
-use crate::models::{TodoItem, TodoItemStatus, TodoList};
+use teloxide::types::{User, Message};
+use crate::models::{TodoItem, TodoList};
 
 use std::sync::{Arc, Mutex};
-use diesel::result::Error;
 use diesel::{dsl, prelude::*};
 
 use self::schema::todos;
