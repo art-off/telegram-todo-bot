@@ -43,6 +43,10 @@ impl TodoItem {
 }
 
 impl TodoList {
+    pub fn new(todo_items: Vec<TodoItem>) -> Self {
+        Self { todo_items }
+    }
+
     pub fn tg_display(&self) -> String {
         self.todo_items.iter()
             .map(|x| format!("- {}", x.tg_display()))

@@ -56,11 +56,8 @@ async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand, connection: Arc<Mute
         TgUserCommand::List => {
             match user_by_msg(msg.clone()) {
                 Some(user) => {
-                    let results = todos
-                        .filter(tg_user_id.eq(user.id.0 as i32))
-                        .load::<TodoItem>(&mut *connection.lock().unwrap())
-                        .expect("Error loading todos");
-                    bot.send_message(msg.chat.id, TodoList { todo_items: results }.tg_display()).await?
+                    let user_todo_list = todo_list_for_user(user, connection);
+                    bot.send_message(msg.chat.id, user_todo_list.tg_display()).await?
                 }
                 None => bot.send_message(msg.chat.id, "No user").await?, // TODO Удалить это
             }
@@ -68,6 +65,15 @@ async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand, connection: Arc<Mute
     };
 
     Ok(())
+}
+
+fn todo_list_for_user(user: User, connection: Arc<Mutex<SqliteConnection>>) -> TodoList {
+    let results = todos
+        .filter(tg_user_id.eq(user.id.0 as i32))
+        .load::<TodoItem>(&mut *connection.lock().unwrap())
+        .expect("Error loading todos");
+
+    TodoList::new(results)
 }
 
 fn user_by_msg(msg: Message) -> Option<User> {
