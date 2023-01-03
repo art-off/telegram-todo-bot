@@ -48,13 +48,13 @@ async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand, connection: Arc<Mute
     match cmd {
         TgUserCommand::Help => bot.send_message(msg.chat.id, TgUserCommand::descriptions().to_string()).await?,
         TgUserCommand::New { todo_text } => {
-            match user_by_msg(msg.clone()) {
+            match msg.from() {
                 Some(user) => bot.send_message(msg.chat.id, user.id.to_string()).await?,
                 None => bot.send_message(msg.chat.id, "No user").await?, // TODO Удалить это
             }
         },
         TgUserCommand::List => {
-            match user_by_msg(msg.clone()) {
+            match msg.from() {
                 Some(user) => {
                     let user_todo_list = todo_list_for_user(user, connection);
                     bot.send_message(msg.chat.id, user_todo_list.tg_display()).await?
@@ -67,18 +67,22 @@ async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand, connection: Arc<Mute
     Ok(())
 }
 
-fn todo_list_for_user(user: User, connection: Arc<Mutex<SqliteConnection>>) -> TodoList {
+// fn add_new_todo_for_user(user: User, todo_text: String, connection: Arc<Mutex<SqliteConnection>>) -> Result<(), ()> {
+//     diesel::insert_into(todos::table)
+//         .values(
+//
+//         )
+//         .get_results(&mut *connection.lock().unwrap())
+//         .expect("Error saving new todo");
+//
+//     Ok(())
+// }
+
+fn todo_list_for_user(user: &User, connection: Arc<Mutex<SqliteConnection>>) -> TodoList {
     let results = todos
         .filter(tg_user_id.eq(user.id.0 as i32))
         .load::<TodoItem>(&mut *connection.lock().unwrap())
         .expect("Error loading todos");
 
     TodoList::new(results)
-}
-
-fn user_by_msg(msg: Message) -> Option<User> {
-    match msg.kind {
-        MessageKind::Common(message_common) => message_common.from,
-        _ => None
-    }
 }
