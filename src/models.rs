@@ -32,7 +32,13 @@ impl TodoItemStatus {
 
 impl TodoItem {
     fn tg_display(&self) -> String {
-        format!("[{}] {}", 4, self.text)
+        format!("[{}] {}", self.status_as_enum().tg_display(), self.text)
+    }
+}
+
+impl TodoItem {
+    fn status_as_enum(&self) -> TodoItemStatus {
+        TodoItemStatus::try_from(self.status as u8).unwrap_or(TodoItemStatus::New)
     }
 }
 
@@ -55,12 +61,4 @@ impl TryFrom<u8> for TodoItemStatus {
             _ => return Err(()),
         })
     }
-}
-
-pub async fn todo_list_for_user(_user: User) -> Option<TodoList>{
-    Some(TodoList { todo_items: vec![] })
-}
-
-pub async fn add_new_todo_item_for_user(_user: User) {
-
 }

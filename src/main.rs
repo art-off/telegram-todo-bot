@@ -6,6 +6,7 @@ mod schema;
 
 use std::env;
 use diesel::{Connection, QueryDsl, RunQueryDsl, SqliteConnection};
+use diesel::prelude::*;
 use dotenvy::dotenv;
 use tg_user_command::TgUserCommand;
 use teloxide::{prelude::*, utils::command::BotCommands};
@@ -56,6 +57,7 @@ async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand, connection: Arc<Mute
             match user_by_msg(msg.clone()) {
                 Some(user) => {
                     let results = todos
+                        .filter(tg_user_id.eq(user.id.0 as i32))
                         .load::<TodoItem>(&mut *connection.lock().unwrap())
                         .expect("Error loading todos");
                     bot.send_message(msg.chat.id, TodoList { todo_items: results }.tg_display()).await?
