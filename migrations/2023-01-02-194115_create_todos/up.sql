@@ -1,5 +1,6 @@
 CREATE TABLE todos (
     id INTEGER PRIMARY KEY NOT NULL,
     text TEXT NOT NULL,
-    status SMALLINT NOT NULL
+    status SMALLINT NOT NULL,
+    tg_user_id INTEGER KEY NOT NULL
 )

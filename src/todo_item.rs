@@ -13,6 +13,7 @@ pub struct TodoItem {
     pub id: i32,
     pub text: String,
     pub status: i16,
+    pub tg_user_id: i32,
 }
 
 pub struct TodoList {
@@ -57,11 +58,7 @@ impl TryFrom<u8> for TodoItemStatus {
 }
 
 pub async fn todo_list_for_user(_user: User) -> Option<TodoList>{
-    Some(TodoList { todo_items: vec![
-        TodoItem { id: 4, text: String::from("First"), status: 0 },
-        TodoItem { id: 4, text: String::from("Second"), status: 0 },
-        TodoItem { id: 4, text: String::from("Third"), status: 0 },
-    ]})
+    Some(TodoList { todo_items: vec![] })
 }
 
 pub async fn add_new_todo_item_for_user(_user: User) {

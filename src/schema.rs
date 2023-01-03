@@ -5,5 +5,6 @@ diesel::table! {
         id -> Integer,
         text -> Text,
         status -> SmallInt,
+        tg_user_id -> Integer,
     }
 }
