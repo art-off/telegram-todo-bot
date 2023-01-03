@@ -1,6 +1,6 @@
 extern crate core;
 
-mod todo_item;
+mod models;
 mod tg_user_command;
 mod schema;
 
@@ -10,7 +10,7 @@ use dotenvy::dotenv;
 use tg_user_command::TgUserCommand;
 use teloxide::{prelude::*, utils::command::BotCommands};
 use teloxide::types::{User, Message, MessageKind};
-use crate::todo_item::{TodoItem, TodoList};
+use crate::models::{TodoItem, TodoList};
 
 use std::sync::{Arc, Mutex};
 
