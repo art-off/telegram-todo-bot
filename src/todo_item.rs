@@ -16,7 +16,7 @@ pub struct TodoItem {
 }
 
 pub struct TodoList {
-    todo_items: Vec<TodoItem>
+    pub(crate) todo_items: Vec<TodoItem>
 }
 
 impl TodoItemStatus {

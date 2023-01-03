@@ -10,40 +10,40 @@ use dotenvy::dotenv;
 use tg_user_command::TgUserCommand;
 use teloxide::{prelude::*, utils::command::BotCommands};
 use teloxide::types::{User, Message, MessageKind};
-use crate::todo_item::TodoItem;
+use crate::todo_item::{TodoItem, TodoList};
+
+use std::sync::{Arc, Mutex};
 
 use self::schema::todos;
+use self::schema::todos::dsl::*;
 
 #[tokio::main]
 async fn main() {
-    use self::schema::todos::dsl::*;
-
     pretty_env_logger::init();
     log::info!("Starting command bot...");
 
-    let connection = &mut establish_connection();
-    let results = todos
-        .load::<TodoItem>(connection)
-        .expect("Error loading todos");
-
-    println!("Displaying {} todos", results.len());
-    for todo in results {
-        println!("{} {} {}", todo.id, todo.text, todo.status);
-    }
-
+    let connection = establish_connection();
     let bot = Bot::from_env();
-    TgUserCommand::repl(bot, answer).await;
+
+    TgUserCommand::repl(
+        bot,
+        move |bot, msg, cmd|
+            answer(bot, msg, cmd, connection.clone())
+    ).await;
 }
 
-fn establish_connection() -> SqliteConnection {
+fn establish_connection() -> Arc<Mutex<SqliteConnection>> {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    SqliteConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+
+    Arc::new(Mutex::new(
+        SqliteConnection::establish(&database_url)
+            .unwrap_or_else(|_| panic!("Error connecting to {}", database_url)),
+    ))
 }
 
-async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand) -> ResponseResult<()> {
+async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand, connection: Arc<Mutex<SqliteConnection>>) -> ResponseResult<()> {
     match cmd {
         TgUserCommand::Help => bot.send_message(msg.chat.id, TgUserCommand::descriptions().to_string()).await?,
         TgUserCommand::New { todo_text } => {
@@ -55,8 +55,10 @@ async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand) -> ResponseResult<()
         TgUserCommand::List => {
             match user_by_msg(msg.clone()) {
                 Some(user) => {
-                    let user_todo_list = todo_item::todo_list_for_user(user).await;
-                    bot.send_message(msg.chat.id, user_todo_list.expect("kek error :(").tg_display()).await?
+                    let results = todos
+                        .load::<TodoItem>(&mut *connection.lock().unwrap())
+                        .expect("Error loading todos");
+                    bot.send_message(msg.chat.id, TodoList { todo_items: results }.tg_display()).await?
                 }
                 None => bot.send_message(msg.chat.id, "No user").await?, // TODO Удалить это
             }
