@@ -14,7 +14,6 @@ use teloxide::types::{User, Message};
 use crate::models::{TodoItem, TodoList};
 
 use std::sync::{Arc, Mutex};
-use diesel::{dsl, prelude::*};
 
 use self::schema::todos;
 use self::schema::todos::dsl::*;
