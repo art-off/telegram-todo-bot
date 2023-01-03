@@ -1,22 +1,27 @@
 extern crate core;
 
 mod models;
-mod tg_user_command;
+mod command;
 mod schema;
 
-use std::env;
-use diesel::{SqliteConnection};
-use diesel::prelude::*;
+use std::{
+    env,
+    sync::{Arc, Mutex}
+};
+use diesel::{
+    prelude::*,
+    SqliteConnection,
+};
+use teloxide::{
+    prelude::*,
+    utils::command::BotCommands,
+    types::{User, Message}
+};
 use dotenvy::dotenv;
-use tg_user_command::TgUserCommand;
-use teloxide::{prelude::*, utils::command::BotCommands};
-use teloxide::types::{User, Message};
+
+use command::Command;
+use crate::schema::todos as TodoItemSchema;
 use crate::models::{TodoItem, TodoList};
-
-use std::sync::{Arc, Mutex};
-
-use self::schema::todos;
-use self::schema::todos::dsl::*;
 
 #[tokio::main]
 async fn main() {
@@ -26,7 +31,7 @@ async fn main() {
     let connection = establish_connection();
     let bot = Bot::from_env();
 
-    TgUserCommand::repl(
+    Command::repl(
         bot,
         move |bot, msg, cmd|
             answer(bot, msg, cmd, connection.clone())
@@ -44,26 +49,17 @@ fn establish_connection() -> Arc<Mutex<SqliteConnection>> {
     ))
 }
 
-async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand, connection: Arc<Mutex<SqliteConnection>>) -> ResponseResult<()> {
+async fn answer(bot: Bot, msg: Message, cmd: Command, connection: Arc<Mutex<SqliteConnection>>) -> ResponseResult<()> {
+    let user = msg.from().unwrap();
     match cmd {
-        TgUserCommand::Help => bot.send_message(msg.chat.id, TgUserCommand::descriptions().to_string()).await?,
-        TgUserCommand::New { todo_text } => {
-            match msg.from() {
-                Some(user) => {
-                    add_new_todo_for_user(user, &todo_text, connection);
-                    bot.send_message(msg.chat.id, user.id.to_string()).await?
-                }
-                None => bot.send_message(msg.chat.id, "No user").await?, // TODO Удалить это
-            }
+        Command::Help => bot.send_message(msg.chat.id, Command::descriptions().to_string()).await?,
+        Command::New { todo_text } => {
+            add_new_todo_for_user(user, &todo_text, connection);
+            bot.send_message(msg.chat.id, "Ok").await?
         },
-        TgUserCommand::List => {
-            match msg.from() {
-                Some(user) => {
-                    let user_todo_list = todo_list_for_user(user, connection);
-                    bot.send_message(msg.chat.id, user_todo_list.tg_display()).await?
-                }
-                None => bot.send_message(msg.chat.id, "No user").await?, // TODO Удалить это
-            }
+        Command::List => {
+            let user_todo_list = todo_list_for_user(user, connection);
+            bot.send_message(msg.chat.id, user_todo_list.tg_display()).await?
         },
     };
 
@@ -71,21 +67,21 @@ async fn answer(bot: Bot, msg: Message, cmd: TgUserCommand, connection: Arc<Mute
 }
 
 fn add_new_todo_for_user(user: &User, todo_text: &str, connection: Arc<Mutex<SqliteConnection>>) {
-    diesel::insert_into(todos::table)
+    diesel::insert_into(TodoItemSchema::table)
         .values(
             (
-                todos::dsl::text.eq(todo_text),
-                todos::dsl::status.eq(0),
-                todos::dsl::tg_user_id.eq(user.id.0 as i32),
+                TodoItemSchema::dsl::text.eq(todo_text),
+                TodoItemSchema::dsl::status.eq(0),
+                TodoItemSchema::dsl::tg_user_id.eq(user.id.0 as i32),
             )
         )
         .execute(&mut *connection.lock().unwrap())
-        .expect("TODO: panic message");
+        .expect("Error saving new todo");
 }
 
 fn todo_list_for_user(user: &User, connection: Arc<Mutex<SqliteConnection>>) -> TodoList {
-    let results = todos
-        .filter(tg_user_id.eq(user.id.0 as i32))
+    let results = TodoItemSchema::table
+        .filter(TodoItemSchema::dsl::tg_user_id.eq(user.id.0 as i32))
         .load::<TodoItem>(&mut *connection.lock().unwrap())
         .expect("Error loading todos");
 
