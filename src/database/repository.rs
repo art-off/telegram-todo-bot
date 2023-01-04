@@ -14,9 +14,10 @@ impl TodoItemRepository {
         Self { connection }
     }
 
-    pub fn get_todos(&self, user: &User) -> TodoList {
+    pub fn get_new_todos(&self, user: &User) -> TodoList {
         let result = TodoItemSchema::table
             .filter(TodoItemSchema::dsl::tg_user_id.eq(user.id.0 as i32))
+            .filter(TodoItemSchema::dsl::status.eq(0))
             .load::<TodoItem>(&mut *self.connection.lock().unwrap())
             .expect("Error loading todos");
 
