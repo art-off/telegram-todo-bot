@@ -12,6 +12,12 @@ pub struct TodoItem {
     pub tg_user_id: i32,
 }
 
+#[derive(Queryable)]
+pub struct LastListMessage {
+    pub message_id: i32,
+    pub tg_user_id: i32,
+}
+
 #[repr(u8)]
 pub enum TodoItemStatus {
     New = 0,
