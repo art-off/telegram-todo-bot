@@ -1,7 +1,8 @@
 use std::{error::Error, sync::Arc};
 use teloxide::{prelude::*, Bot, types::Message, utils::command::BotCommands};
+use crate::bot::common_handlers::handle_list_command;
 use crate::BotState;
-use crate::database::repository::TodoItemRepository;
+use crate::database::repository::{LastListMessageRepository, TodoItemRepository};
 use crate::presenting::todo_item::tg_display_todo_list;
 
 #[derive(BotCommands, Clone)]
@@ -13,10 +14,13 @@ pub enum Command {
     New { todo_text: String, },
     #[command(description = "Show list of new todos")]
     List,
+    #[command(description = "Kek i kek")]
+    Kek,
 }
 
 pub async fn handle(bot: Bot, msg: Message, cmd: Command, state: Arc<BotState>) -> Result<(), Box<dyn Error + Send + Sync>> {
     let todo_item_repository = TodoItemRepository::new(state.connection.clone());
+    let last_list_message_repository = LastListMessageRepository::new(state.connection.clone());
     let user = msg.from().unwrap();
 
     match cmd {
@@ -28,9 +32,14 @@ pub async fn handle(bot: Bot, msg: Message, cmd: Command, state: Arc<BotState>) 
             bot.send_message(msg.chat.id, "Ok").await?;
         },
         Command::List => {
-            let user_todo_list = todo_item_repository.get_new_todos(user);
-            let message = tg_display_todo_list(user_todo_list);
-            bot.send_message(msg.chat.id, message).await?;
+            handle_list_command(bot, msg, state.clone()).await?;
+        },
+        Command::Kek => {
+            let last_list_message = last_list_message_repository.get_last_list_message(user);
+
+            if let Some(last_list_message) = last_list_message {
+                bot.send_message(msg.chat.id, last_list_message.message_id.to_string()).await?;
+            }
         },
     };
 

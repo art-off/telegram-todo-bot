@@ -62,40 +62,26 @@ impl LastListMessageRepository {
         result
     }
 
+    // TODO вот сюда бы key-value хранилище
     pub fn save_last_list_message(&self, msg: Message, user: &User) {
         let user_id = user.id.0 as i32;
         let msg_id = msg.id.0;
 
-        if self.is_last_list_message_exists(msg, user) {
-            diesel::update(LastListMessageSchema::table)
-                .filter(LastListMessageSchema::tg_user_id.eq(user_id))
-                .filter(LastListMessageSchema::message_id.eq(msg_id))
-                .set(LastListMessageSchema::message_id.eq(msg_id))
-                .execute(&mut *self.connection.lock().unwrap())
-                .expect("LastListMessage updating is falling");
-        } else {
-            diesel::insert_into(LastListMessageSchema::table)
-                .values(
-                    (
-                        LastListMessageSchema::message_id.eq(msg_id),
-                        LastListMessageSchema::tg_user_id.eq(user_id),
-                    )
-                )
-                .execute(&mut *self.connection.lock().unwrap())
-                .expect("Error saving new LastListMessage");
-        }
-    }
-
-    pub fn is_last_list_message_exists(&self, msg: Message, user: &User) -> bool {
-        let user_id = user.id.0 as i32;
-        let msg_id = msg.id.0;
-
-        diesel::dsl::select(diesel::dsl::exists(
+        diesel::delete(
             LastListMessageSchema::table
-                .filter(LastListMessageSchema::tg_user_id.eq(user_id))
-                .filter(LastListMessageSchema::message_id.eq(msg_id))
-        ))
-            .get_result(&mut *self.connection.lock().unwrap())
-            .unwrap_or(false)
+                .filter(LastListMessageSchema::dsl::tg_user_id.eq(user_id))
+        )
+            .execute(&mut *self.connection.lock().unwrap())
+            .expect("LastListMessage deleting is falling");
+
+        diesel::insert_into(LastListMessageSchema::table)
+            .values(
+                (
+                    LastListMessageSchema::dsl::message_id.eq(msg_id),
+                    LastListMessageSchema::dsl::tg_user_id.eq(user_id),
+                )
+            )
+            .execute(&mut *self.connection.lock().unwrap())
+            .expect("Error saving new LastListMessage");
     }
 }
