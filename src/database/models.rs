@@ -14,6 +14,7 @@ pub struct TodoItem {
 
 #[derive(Queryable)]
 pub struct LastListMessage {
+    pub id: i32,
     pub message_id: i32,
     pub tg_user_id: i32,
 }
