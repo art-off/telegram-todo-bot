@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use diesel::{prelude::*, SqliteConnection};
 use teloxide::types::{Message, User};
 
-use crate::database::models::{LastListMessage, TodoItem, TodoList};
+use crate::database::models::{LastListMessage, TodoItem, TodoItemStatus, TodoList};
 
 use crate::database::schema::todos as TodoItemSchema;
 use crate::database::schema::last_list_message as LastListMessageSchema;
@@ -16,11 +16,10 @@ impl TodoItemRepository {
         Self { connection }
     }
 
-    pub fn get_new_todos(&self, user: &User) -> TodoList {
+    pub fn get_todos(&self, user: &User) -> TodoList {
         let user_id = user.id.0 as i32;
         let result = TodoItemSchema::table
             .filter(TodoItemSchema::dsl::tg_user_id.eq(user_id))
-            .filter(TodoItemSchema::dsl::status.eq(0))
             .load::<TodoItem>(&mut *self.connection.lock().unwrap())
             .expect("Error loading todos");
 
@@ -38,6 +37,16 @@ impl TodoItemRepository {
             )
             .execute(&mut *self.connection.lock().unwrap())
             .expect("Error saving new todo");
+    }
+
+    pub fn update_status(&self, todo_item: &TodoItem, status: TodoItemStatus, user: &User) {
+        diesel::update(
+            TodoItemSchema::table
+                .filter(TodoItemSchema::dsl::id.eq(todo_item.id))
+        )
+            .set(TodoItemSchema::dsl::status.eq(status as i16))
+            .execute(&mut *self.connection.lock().unwrap())
+            .expect("Error updating status");
     }
 }
 

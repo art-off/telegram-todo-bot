@@ -2,7 +2,8 @@ use crate::database::models::{TodoItem, TodoItemStatus, TodoList};
 
 pub fn tg_display_todo_list(todo_list: TodoList) -> String {
     todo_list.todo_items.iter()
-        .map(|x| format!("- {}", tg_display_todo_item(x)))
+        .enumerate()
+        .map(|x| format!("{}: {}", x.0, tg_display_todo_item(x.1)))
         .collect::<Vec<String>>()
         .join("\n")
 }
