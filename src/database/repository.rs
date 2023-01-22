@@ -26,6 +26,16 @@ impl TodoItemRepository {
         TodoList::new(result)
     }
 
+    pub fn delete_todo(&self, todo_item_id: i32) {
+        diesel::delete(
+            TodoItemSchema::table.filter(
+                TodoItemSchema::dsl::id.eq(todo_item_id)
+            )
+        )
+            .execute(&mut *self.connection.lock().unwrap())
+            .expect("Error deleting todo");
+    }
+
     pub fn add_todo(&self, todo_text: &str, user: &User) {
         diesel::insert_into(TodoItemSchema::table)
             .values(

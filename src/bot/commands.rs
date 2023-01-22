@@ -1,6 +1,6 @@
 use std::{error::Error, sync::Arc};
 use teloxide::{prelude::*, Bot, types::Message, utils::command::BotCommands};
-use crate::bot::common_handlers::{handle_done_command, handle_list_command};
+use crate::bot::common_handlers::{handle_delete_command, handle_done_command, handle_list_command};
 use crate::BotState;
 use crate::database::repository::{LastListMessageRepository, TodoItemRepository};
 use crate::presenting::todo_item::tg_display_todo_list;
@@ -17,7 +17,7 @@ pub enum Command {
     #[command(description = "Set status to `Done`")]
     Done { todo_item_num: usize },
     #[command(description = "Delete todo")]
-    Delete,
+    Delete { todo_item_num: usize, },
     #[command(description = "Kek i kek")]
     Kek,
 }
@@ -41,8 +41,8 @@ pub async fn handle(bot: Bot, msg: Message, cmd: Command, state: Arc<BotState>) 
         Command::Done { todo_item_num } => {
             handle_done_command(bot, msg, state.clone(), todo_item_num).await?;
         },
-        Command::Delete => {
-
+        Command::Delete { todo_item_num } => {
+            handle_delete_command(bot, msg, state.clone(), todo_item_num).await?;
         },
         Command::Kek => {
             let last_list_message = last_list_message_repository.get_last_list_message(user);

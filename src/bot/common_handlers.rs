@@ -42,6 +42,27 @@ pub async fn handle_done_command(bot: Bot, msg: Message, state: Arc<BotState>, t
     Ok(())
 }
 
+pub async fn handle_delete_command(bot: Bot, msg: Message, state: Arc<BotState>, todo_item_num: usize) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let user = msg.from().unwrap();
+    let todo_item_repository = TodoItemRepository::new(state.connection.clone());
+
+    let todo_list = todo_item_repository.get_todos(user);
+    let todo_item = todo_list.todo_items.get(todo_item_num);
+    match todo_item {
+        Some(todo_item) => {
+            todo_item_repository.delete_todo(todo_item.id);
+            let updated_todo_list = todo_item_repository.get_todos(user);
+            send_todo_list(bot, updated_todo_list, msg.chat.id, user, state).await?;
+        },
+        None => {
+            bot.send_message(msg.chat.id, format!("Todo with index {} not found", todo_item_num)).await?;
+        },
+    }
+
+    Ok(())
+}
+
+
 async fn send_todo_list(bot: Bot, todo_list: TodoList, chat_id: ChatId, user: &User, state: Arc<BotState>) -> Result<(), Box<dyn Error + Send + Sync>> {
     let last_list_message_repository = LastListMessageRepository::new(state.connection.clone());
 
