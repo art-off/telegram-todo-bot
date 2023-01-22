@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 use diesel::{prelude::*, SqliteConnection};
 use teloxide::types::{User};
+use diesel::OptionalExtension;
 
 use crate::database::models::{TodoItem, TodoItemStatus, TodoList};
 
@@ -23,6 +24,14 @@ impl TodoItemRepository {
             .expect("Error loading todos");
 
         TodoList::new(result)
+    }
+
+    pub fn get_todo(&self, todo_item_id: i32) -> Option<TodoItem> {
+        TodoItemSchema::table
+            .filter(TodoItemSchema::dsl::id.eq(todo_item_id))
+            .first(&mut *self.connection.lock().unwrap())
+            .optional()
+            .unwrap()
     }
 
     pub fn delete_todo(&self, todo_item_id: i32) {

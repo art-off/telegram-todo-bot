@@ -7,7 +7,11 @@ use crate::database::models::{TodoItemStatus, TodoList};
 use crate::database::repository::{TodoItemRepository};
 use crate::presenting::todo_item::tg_display_todo_list;
 
-pub async fn handle_list_command(bot: Bot, msg: Message, state: Arc<BotState>) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub async fn handle_list_command(
+    bot: Bot,
+    msg: Message,
+    state: Arc<BotState>
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let user = msg.from().unwrap();
     let todo_item_repository = TodoItemRepository::new(state.connection.clone());
 
@@ -17,7 +21,12 @@ pub async fn handle_list_command(bot: Bot, msg: Message, state: Arc<BotState>) -
     Ok(())
 }
 
-pub async fn handle_done_command(bot: Bot, msg: Message, state: Arc<BotState>, todo_item_num: usize) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub async fn handle_done_command(
+    bot: Bot,
+    msg: Message,
+    state: Arc<BotState>,
+    todo_item_num: usize
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let user = msg.from().unwrap();
     let todo_item_repository = TodoItemRepository::new(state.connection.clone());
     let todo_list = todo_item_repository.get_todos(user);
@@ -29,14 +38,22 @@ pub async fn handle_done_command(bot: Bot, msg: Message, state: Arc<BotState>, t
             send_todo_list(bot, updated_todo_list, msg.chat.id).await?;
         },
         None => {
-            bot.send_message(msg.chat.id, format!("Todo with index {} not found", todo_item_num)).await?;
+            bot.send_message(
+                msg.chat.id,
+                format!("Todo with index {} not found", todo_item_num)
+            ).await?;
         },
     }
 
     Ok(())
 }
 
-pub async fn handle_delete_command(bot: Bot, msg: Message, state: Arc<BotState>, todo_item_num: usize) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub async fn handle_delete_command(
+    bot: Bot,
+    msg: Message,
+    state: Arc<BotState>,
+    todo_item_num: usize
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let user = msg.from().unwrap();
     let todo_item_repository = TodoItemRepository::new(state.connection.clone());
 
@@ -57,7 +74,11 @@ pub async fn handle_delete_command(bot: Bot, msg: Message, state: Arc<BotState>,
 }
 
 
-async fn send_todo_list(bot: Bot, todo_list: TodoList, chat_id: ChatId) -> Result<(), Box<dyn Error + Send + Sync>> {
+async fn send_todo_list(
+    bot: Bot, todo_list:
+    TodoList,
+    chat_id: ChatId
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let message = tg_display_todo_list(&todo_list);
 
     let keyboard = make_update_todos_status_keyboard(&todo_list);

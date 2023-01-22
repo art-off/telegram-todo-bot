@@ -19,7 +19,12 @@ pub enum Command {
     Delete { todo_item_num: usize, },
 }
 
-pub async fn handle(bot: Bot, msg: Message, cmd: Command, state: Arc<BotState>) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub async fn handle(
+    bot: Bot,
+    msg: Message,
+    cmd: Command,
+    state: Arc<BotState>
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let todo_item_repository = TodoItemRepository::new(state.connection.clone());
     let user = msg.from().unwrap();
 

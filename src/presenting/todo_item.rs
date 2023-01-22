@@ -9,13 +9,12 @@ pub fn tg_display_todo_list(todo_list: &TodoList) -> String {
 }
 
 pub fn tg_display_todo_item(todo_item: &TodoItem) -> String {
-    format!("[{}] {}", tg_display_status(todo_item.status_as_enum()), todo_item.text)
+    format!("{} {}", tg_display_status(todo_item.status_as_enum()), todo_item.text)
 }
 
 pub fn tg_display_status(status: TodoItemStatus) -> String {
-    // TODO наверное есть встроенный красивый механизм
     match status {
-        TodoItemStatus::New => String::from("New"),
-        TodoItemStatus::Done => String::from("Done"),
+        TodoItemStatus::New => String::from("🔴"),
+        TodoItemStatus::Done => String::from("✅"),
     }
 }

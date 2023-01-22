@@ -34,8 +34,15 @@ async fn main() {
     let bot = Bot::from_env();
 
     let handler = dptree::entry()
-        .branch(Update::filter_message().filter_command::<BotCommands::Command>().endpoint(BotCommands::handle))
-        .branch(Update::filter_callback_query().endpoint(handle_callback));
+        .branch(
+            Update::filter_message()
+                .filter_command::<BotCommands::Command>()
+                .endpoint(BotCommands::handle)
+        )
+        .branch(
+            Update::filter_callback_query()
+                .endpoint(handle_callback)
+        );
 
     Dispatcher::builder(bot, handler)
         .dependencies(dptree::deps![Arc::clone(&bot_state)])
