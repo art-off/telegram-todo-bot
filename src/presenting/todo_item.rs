@@ -1,6 +1,6 @@
 use crate::database::models::{TodoItem, TodoItemStatus, TodoList};
 
-pub fn tg_display_todo_list(todo_list: TodoList) -> String {
+pub fn tg_display_todo_list(todo_list: &TodoList) -> String {
     todo_list.todo_items.iter()
         .enumerate()
         .map(|x| format!("{}: {}", x.0, tg_display_todo_item(x.1)))

@@ -2,7 +2,8 @@ use std::error::Error;
 use std::os::macos::raw::stat;
 use std::sync::Arc;
 use teloxide::{prelude::*, Bot, utils::command::BotCommands};
-use teloxide::types::{MessageId, User};
+use teloxide::types::{InlineKeyboardButton, InlineKeyboardMarkup, MessageId, User};
+use crate::bot::keyboard::make_update_todos_status_keyboard;
 use crate::BotState;
 use crate::database::models::{TodoItemStatus, TodoList};
 use crate::database::repository::{LastListMessageRepository, TodoItemRepository};
@@ -11,7 +12,6 @@ use crate::presenting::todo_item::tg_display_todo_list;
 pub async fn handle_list_command(bot: Bot, msg: Message, state: Arc<BotState>) -> Result<(), Box<dyn Error + Send + Sync>> {
     let user = msg.from().unwrap();
     let todo_item_repository = TodoItemRepository::new(state.connection.clone());
-    let last_list_message_repository = LastListMessageRepository::new(state.connection.clone());
 
     let user_todo_list = todo_item_repository.get_todos(user);
     send_todo_list(bot, user_todo_list, msg.chat.id, user, state).await?;
@@ -66,8 +66,12 @@ pub async fn handle_delete_command(bot: Bot, msg: Message, state: Arc<BotState>,
 async fn send_todo_list(bot: Bot, todo_list: TodoList, chat_id: ChatId, user: &User, state: Arc<BotState>) -> Result<(), Box<dyn Error + Send + Sync>> {
     let last_list_message_repository = LastListMessageRepository::new(state.connection.clone());
 
-    let message = tg_display_todo_list(todo_list);
-    let bot_msg = bot.send_message(chat_id, message).await?;
+    let message = tg_display_todo_list(&todo_list);
+
+
+    let keyboard = make_update_todos_status_keyboard(&todo_list);
+    let bot_msg = bot.send_message(chat_id, message).reply_markup(keyboard).await?;
+
     last_list_message_repository.save_last_list_message(bot_msg, user);
 
     Ok(())

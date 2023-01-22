@@ -43,6 +43,15 @@ impl TryFrom<i16> for TodoItemStatus {
     }
 }
 
+impl TodoItemStatus {
+    pub fn toggled(&self) -> Self {
+        match self {
+            TodoItemStatus::New => TodoItemStatus::Done,
+            TodoItemStatus::Done => TodoItemStatus::New
+        }
+    }
+}
+
 impl TodoItem {
     pub fn status_as_enum(&self) -> TodoItemStatus {
         TodoItemStatus::try_from(self.status).unwrap_or(TodoItemStatus::New)
