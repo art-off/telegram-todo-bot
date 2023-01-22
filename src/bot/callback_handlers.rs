@@ -7,7 +7,7 @@ use teloxide::prelude::*;
 use crate::bot::keyboard::make_update_todos_status_keyboard;
 use crate::BotState;
 use crate::database::models::TodoList;
-use crate::database::repository::{LastListMessageRepository, TodoItemRepository};
+use crate::database::repository::{TodoItemRepository};
 use crate::presenting::todo_item::tg_display_todo_list;
 
 pub async fn handle_callback(bot: Bot, q: CallbackQuery, state: Arc<BotState>) -> Result<(), Box<dyn Error + Send + Sync>> {
