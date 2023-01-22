@@ -1,11 +1,10 @@
 use std::sync::{Arc, Mutex};
 use diesel::{prelude::*, SqliteConnection};
-use teloxide::types::{Message, User};
+use teloxide::types::{User};
 
-use crate::database::models::{LastListMessage, TodoItem, TodoItemStatus, TodoList};
+use crate::database::models::{TodoItem, TodoItemStatus, TodoList};
 
 use crate::database::schema::todos as TodoItemSchema;
-use crate::database::schema::last_list_message as LastListMessageSchema;
 
 pub struct TodoItemRepository {
     connection: Arc<Mutex<SqliteConnection>>
@@ -49,7 +48,7 @@ impl TodoItemRepository {
             .expect("Error saving new todo");
     }
 
-    pub fn update_status(&self, todo_item: &TodoItem, status: TodoItemStatus, user: &User) {
+    pub fn update_status(&self, todo_item: &TodoItem, status: TodoItemStatus) {
         diesel::update(
             TodoItemSchema::table
                 .filter(TodoItemSchema::dsl::id.eq(todo_item.id))

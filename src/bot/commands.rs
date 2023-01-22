@@ -3,7 +3,6 @@ use teloxide::{prelude::*, Bot, types::Message, utils::command::BotCommands};
 use crate::bot::common_handlers::{handle_delete_command, handle_done_command, handle_list_command};
 use crate::BotState;
 use crate::database::repository::{TodoItemRepository};
-use crate::presenting::todo_item::tg_display_todo_list;
 
 #[derive(BotCommands, Clone)]
 #[command(rename_rule = "lowercase", description = "These commands are supported:")]
