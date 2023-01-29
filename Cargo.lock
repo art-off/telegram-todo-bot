@@ -1099,6 +1099,7 @@ dependencies = [
  "dotenvy",
  "log",
  "pretty_env_logger",
+ "regex",
  "teloxide",
  "tokio",
 ]

@@ -15,8 +15,8 @@ pub enum Command {
     List,
     #[command(description = "Set status to `Done`")]
     Done { todo_item_num: usize },
-    #[command(description = "Delete todo")]
-    Delete { todo_item_num: usize, },
+    #[command(description = "Delete todo, parameter examples: '1', '1, 2 3', '1-5'")]
+    Delete { todo_items_to_delete: String, },
 }
 
 pub async fn handle(
@@ -42,8 +42,8 @@ pub async fn handle(
         Command::Done { todo_item_num } => {
             handle_done_command(bot, msg, state.clone(), todo_item_num).await?;
         },
-        Command::Delete { todo_item_num } => {
-            handle_delete_command(bot, msg, state.clone(), todo_item_num).await?;
+        Command::Delete { todo_items_to_delete } => {
+            handle_delete_command(bot, msg, state.clone(), todo_items_to_delete).await?;
         }
     };
 

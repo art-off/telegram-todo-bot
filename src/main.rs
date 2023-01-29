@@ -1,5 +1,6 @@
 extern crate core;
 
+mod utils;
 mod database;
 mod bot;
 mod presenting;
