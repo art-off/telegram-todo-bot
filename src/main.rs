@@ -3,6 +3,7 @@ extern crate core;
 mod database;
 mod bot;
 mod presenting;
+mod constants;
 
 use std::sync::{Arc, Mutex};
 use dotenvy::dotenv;

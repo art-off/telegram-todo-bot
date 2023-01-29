@@ -3,9 +3,9 @@ use std::sync::Arc;
 use teloxide::{prelude::*, Bot};
 use crate::bot::keyboard::make_update_todos_status_keyboard;
 use crate::BotState;
+use crate::constants::Constants;
 use crate::database::models::{TodoItemStatus, TodoList};
 use crate::database::repository::{TodoItemRepository};
-use crate::presenting::todo_item::tg_display_todo_list;
 
 pub async fn handle_list_command(
     bot: Bot,
@@ -79,10 +79,14 @@ async fn send_todo_list(
     TodoList,
     chat_id: ChatId
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let message = tg_display_todo_list(&todo_list);
-
     let keyboard = make_update_todos_status_keyboard(&todo_list);
-    bot.send_message(chat_id, message).reply_markup(keyboard).await?;
+
+    bot.send_message(
+        chat_id,
+        Constants::list_message_string()
+    )
+        .reply_markup(keyboard)
+        .await?;
 
     Ok(())
 }

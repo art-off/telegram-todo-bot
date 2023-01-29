@@ -5,8 +5,8 @@ use teloxide::types::{CallbackQuery};
 use teloxide::prelude::*;
 use crate::bot::keyboard::make_update_todos_status_keyboard;
 use crate::BotState;
+use crate::constants::Constants;
 use crate::database::repository::{TodoItemRepository};
-use crate::presenting::todo_item::tg_display_todo_list;
 
 pub async fn handle_callback(
     bot: Bot,
@@ -42,7 +42,7 @@ async fn handle_update_todo_status_callback(
             bot.edit_message_text(
                 mes.chat.id,
                 mes.id,
-                tg_display_todo_list(&updated_todo_list)
+                Constants::list_message_string(),
             )
                 .reply_markup(keyboard)
                 .await?;

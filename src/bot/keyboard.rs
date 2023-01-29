@@ -6,10 +6,11 @@ pub fn make_update_todos_status_keyboard(todo_list: &TodoList) -> InlineKeyboard
     let mut keyboard: Vec<Vec<InlineKeyboardButton>> = vec![];
 
     let buttons: Vec<InlineKeyboardButton> = todo_list.todo_items.iter()
+        .enumerate()
         .map(|x|
             InlineKeyboardButton::callback(
-                tg_display_todo_item(x),
-                x.id.to_string(),
+                tg_display_todo_item(x.0, x.1),
+                x.1.id.to_string(),
             )
         )
         .collect();
